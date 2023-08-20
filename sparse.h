@@ -22,6 +22,68 @@ struct MatrixList
 };
 typedef struct MatrixList MatrixList;
 
+float matrix_getelem(MatrixList* m, int x, int y)
+{
+      if (x - 1 < -1 || x - 1 >= m->linha || y - 1 < -1 || y >= m->coluna)
+      {
+            printf("Posicao fora dos limites da matriz(GETELEM).\n");
+            exit(EXIT_FAILURE);
+      }
+
+      Matrix* currentNode = m->head->right;
+
+      while (currentNode != m->head)
+      {
+            if (currentNode->line == x - 1 && currentNode->column == y - 1)
+            {
+                  return currentNode->info;
+            }
+            currentNode = currentNode->right;
+      }
+
+      return 0.0;
+}
+
+void matrix_setelem(MatrixList* m, int x, int y, float elem)
+{
+      if (x - 1 < -1 || x - 1 >= m->linha || y - 1 < -1 || y - 1 >= m->coluna)
+      {
+            printf("Posicao fora dos limites da matriz(SETELEM).\n");
+            exit(EXIT_FAILURE);
+      }
+
+      Matrix* currentNode = m->head->right;
+
+      while (currentNode != m->head)
+      {
+            if (currentNode->line == x - 1 && currentNode->column == y - 1)
+            {
+                  currentNode->info = elem;
+                  return;
+            }
+            currentNode = currentNode->right;
+      }
+
+      // Se o elemento não existir, criar um novo nó para atribuir o valor
+      Matrix* newNode = (Matrix*)malloc(sizeof(Matrix));
+      if (newNode == NULL) 
+      {
+            printf("Falha ao alocar memória para o nó da matriz");
+            exit(EXIT_FAILURE);
+      }
+
+      newNode->line = x - 1;
+      newNode->column = y - 1;
+      newNode->info = elem;
+
+      newNode->below = m->head->below;
+      m->head->below = newNode;
+
+      newNode->right = m->head->right;
+      m->head->right = newNode;
+      printf("\n\n");
+}
+
 MatrixList* matrix_create() 
 {
       MatrixList* matrixList = (MatrixList*)malloc(sizeof(MatrixList));
@@ -34,6 +96,13 @@ MatrixList* matrix_create()
 
       printf("Digite o numero de linhas e colunas: ");
       scanf("%d %d", &matrixList->linha, &matrixList->coluna);
+      getchar();
+
+      if (matrixList->linha < 1 || matrixList->coluna < 1)
+      {
+            printf("Valores nao aceitos para a criacao de uma matriz.");
+            exit(EXIT_FAILURE);
+      }
 
       matrixList->head = (Matrix*)malloc(sizeof(Matrix));
 
@@ -57,32 +126,26 @@ MatrixList* matrix_create()
       while (1) 
       {
             fgets(input, sizeof(input), stdin);
+
             if (input[0] == '.') 
             {
                   break;
             }
             sscanf(input, "%d %d %f", &line, &column, &info);
 
-            Matrix* newNode = (Matrix*)malloc(sizeof(Matrix));
-            if (newNode == NULL) 
+            if (line <= 0 || column <= 0 || line > matrixList->linha || column > matrixList->coluna)
             {
-                  printf("Falha ao alocar memória para o nó da matriz");
-                  exit(EXIT_FAILURE);
+                  printf("Valor fora dos limites da matriz.\n");
+                  continue;
             }
 
-            newNode->line = line - 1;
-            newNode->column = column - 1;
-            newNode->info = info;
-
-            newNode->below = matrixList->head->below;
-            matrixList->head->below = newNode;
-
-            newNode->right = matrixList->head->right;
-            matrixList->head->right = newNode;
+            matrix_setelem(matrixList, line, column, info);
       }
 
+      printf("\n");
       return matrixList;
 }
+
 
 void matrix_destroy(MatrixList* m) 
 {
@@ -124,79 +187,54 @@ void matrix_print(MatrixList* m)
             }
       printf("\n");
       }
+      printf("\n");
 }
 
 MatrixList* matrix_add(MatrixList* m, MatrixList* n)
 {
-      if (m->linha != n->linha || m->coluna != n->coluna)
-      {
-            printf("As matrizes não possuem as mesmas dimensões para realizar a soma.");
-            return NULL;
-      }
-
-      MatrixList* result = matrix_create();
-
-      for (int line = 0; line < m->linha; line++)
-      {
-            for (int column = 0; column < m->coluna; column++)
+            if (m->linha != n->linha || m->coluna != n->coluna)
             {
-                  Matrix* currentNodeM = m->head->right;
-                  Matrix* currentNodeN = n->head->right;
-                  float sum = 0;
+                  printf("As matrizes não possuem as mesmas dimensões para realizar a soma.");
+                  return NULL;
+            }
 
-                  while (currentNodeM != m->head || currentNodeN != n->head)
+            MatrixList* result = (MatrixList*)malloc(sizeof(MatrixList));
+            if (result == NULL)
+            {
+                  printf("Falha ao alocar memória para a matriz de resultado.");
+                  exit(EXIT_FAILURE);
+            }
+
+            result->linha = m->linha;
+            result->coluna = m->coluna;
+
+            result->head = (Matrix*)malloc(sizeof(Matrix));
+            if (result->head == NULL)
+            {
+                  printf("Falha ao alocar memória para o nó cabeça da matriz de resultado.");
+                  exit(EXIT_FAILURE);
+            }
+            result->head->line = -1;
+            result->head->column = -1;
+            result->head->info = 0;
+            result->head->right = result->head;
+            result->head->below = result->head;
+
+            for (int line = 0; line < m->linha; line++)
+            {
+                  for (int column = 0; column < m->coluna; column++)
                   {
-                  if (currentNodeM->line == line && currentNodeM->column == column)
-                  {
-                        sum += currentNodeM->info;
-                        currentNodeM = currentNodeM->right;
-                  }
+                        float soma = matrix_getelem(m, line + 1, column + 1) + matrix_getelem(n, line + 1, column + 1);
 
-                  if (currentNodeN->line == line && currentNodeN->column == column)
-                  {
-                        sum += currentNodeN->info;
-                        currentNodeN = currentNodeN->right;
-                  }
-
-                  if (currentNodeM != m->head)
-                  {
-                        currentNodeM = currentNodeM->right;
-                  }
-                  if (currentNodeN != n->head)
-                  {
-                        currentNodeN = currentNodeN->right;
-                  }
-
-
-                  if (currentNodeM == m->head && currentNodeN == n->head)
-                  {
-                        break;
-                  }
-                  }
-
-                  if (sum != 0)
-                  {
-                  Matrix* newNode = (Matrix*)malloc(sizeof(Matrix));
-                  if (newNode == NULL)
-                  {
-                        printf("Falha ao alocar memória para o nó da matriz de resultado");
-                        exit(EXIT_FAILURE);
-                  }
-
-                  newNode->line = line;
-                  newNode->column = column;
-                  newNode->info = sum;
-
-                  newNode->below = result->head->below;
-                  result->head->below = newNode;
-
-                  newNode->right = result->head->right;
-                  result->head->right = newNode;
+                        if (soma != 0)
+                        {
+                              matrix_setelem(result, line + 1, column + 1, soma);
+                        }
                   }
             }
-      }
 
-      return result;
+            printf("\n");
+            return result;
 }
 
 #endif
