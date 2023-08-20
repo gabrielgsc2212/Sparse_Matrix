@@ -1,5 +1,5 @@
-#ifndef SPARSE_H
-#define SPARSE_H
+#ifndef MATRIX_H
+#define MATRIX_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -235,6 +235,110 @@ MatrixList* matrix_add(MatrixList* m, MatrixList* n)
 
             printf("\n");
             return result;
+}
+
+MatrixList* matrix_transpose(MatrixList* m)
+{
+      MatrixList* result = (MatrixList*)malloc(sizeof(MatrixList));
+
+      if (result == NULL)
+      {
+            printf("Falha ao alocar memória para a matriz transposta.");
+            exit(EXIT_FAILURE);
+      }
+
+      result->linha = m->coluna;
+      result->coluna = m->linha;
+
+      result->head = (Matrix*)malloc(sizeof(Matrix));
+      if (result->head == NULL)
+      {
+            printf("Falha ao alocar memória para o nó cabeça da matriz transposta.");
+            exit(EXIT_FAILURE);
+      }
+      result->head->line = -1;
+      result->head->column = -1;
+      result->head->info = 0;
+      result->head->right = result->head;
+      result->head->below = result->head;
+
+      for (int line = 0; line < m->linha; line++)
+      {
+            for (int column = 0; column < m->coluna; column++)
+            {
+                  float elem = matrix_getelem(m, line + 1, column + 1);
+                  if (elem != 0)
+                  {
+                        matrix_setelem(result, column + 1, line + 1, elem);
+                  }
+            }
+      }
+
+      return result;
+}
+
+MatrixList* matrix_multiply(MatrixList* m, MatrixList* n)
+{
+      if (m->coluna != n->linha)
+      {
+            printf("Número de colunas da primeira matriz não é igual ao número de linhas da segunda matriz.");
+            return NULL;
+      }
+
+      MatrixList* result = (MatrixList*)malloc(sizeof(MatrixList));
+
+      if (result == NULL)
+      {
+            printf("Falha ao alocar memória para a matriz resultante da multiplicação.");
+            exit(EXIT_FAILURE);
+      }
+
+      result->linha = m->linha;
+      result->coluna = n->coluna;
+
+      result->head = (Matrix*)malloc(sizeof(Matrix));
+      if (result->head == NULL)
+      {
+            printf("Falha ao alocar memória para o nó cabeça da matriz resultante da multiplicação.");
+            exit(EXIT_FAILURE);
+      }
+
+      result->head->line = -1;
+      result->head->column = -1;
+      result->head->info = 0;
+      result->head->right = result->head;
+      result->head->below = result->head;
+
+      // Matriz intermediária para auxiliar na multiplicação
+      float** intermediate = (float**)malloc(m->linha * sizeof(float*));
+      for (int i = 0; i < m->linha; i++)
+      {
+            intermediate[i] = (float*)calloc(n->coluna, sizeof(float));
+      }
+
+      for (int i = 0; i < m->linha; i++)
+      {
+            for (int j = 0; j < n->coluna; j++)
+            {
+                  for (int k = 0; k < m->coluna; k++)
+                  {
+                  intermediate[i][j] += matrix_getelem(m, i + 1, k + 1) * matrix_getelem(n, k + 1, j + 1);
+                  }
+
+                  if (intermediate[i][j] != 0)
+                  {
+                  matrix_setelem(result, i + 1, j + 1, intermediate[i][j]);
+                  }
+            }
+      }
+
+      for (int i = 0; i < m->linha; i++)
+      {
+            free(intermediate[i]);
+      }
+      free(intermediate);
+
+      return result;
 }
 
 #endif
