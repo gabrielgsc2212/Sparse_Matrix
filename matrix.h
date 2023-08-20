@@ -149,17 +149,17 @@ MatrixList* matrix_create()
 
 void matrix_destroy(MatrixList* m) 
 {
-    Matrix* currentNode = m->head->right;
-    while (currentNode != m->head) 
-    {
-        Matrix* temp = currentNode;
-        currentNode = currentNode->right;
-        free(temp);
-    }
+      Matrix* currentNode = m->head->right;
+      while (currentNode != m->head) 
+      {
+            Matrix* temp = currentNode;
+            currentNode = currentNode->right;
+            free(temp);
+      }
 
-    free(m->head);
+      free(m->head);
 
-    free(m);
+      free(m);
 }
 
 void matrix_print(MatrixList* m) 
