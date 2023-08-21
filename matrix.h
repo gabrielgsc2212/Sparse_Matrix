@@ -120,7 +120,7 @@ MatrixList* matrix_create()
 
       int line, column;
       float info;
-      char input[100];
+      char input[1000];
 
       printf("Digite a linha, coluna e valor (digite '.' para sair):\n");
       while (1) 
